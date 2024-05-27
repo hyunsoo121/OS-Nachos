@@ -10,33 +10,34 @@ public class ThreadedKernel extends Kernel {
      * Allocate a new multi-threaded kernel.
      */
     public ThreadedKernel() {
-	super();
+        super();
     }
 
     /**
      * Initialize this kernel. Creates a scheduler, the first thread, and an
-     * alarm, and enables interrupts. Creates a file system if necessary.   
+     * alarm, and enables interrupts. Creates a file system if necessary.
      */
     public void initialize(String[] args) {
-	// set scheduler
-	String schedulerName = Config.getString("ThreadedKernel.scheduler");
-	scheduler = (Scheduler) Lib.constructObject(schedulerName);
+        // set scheduler
+        String schedulerName = Config.getString("ThreadedKernel.scheduler");
+        scheduler = (Scheduler) Lib.constructObject(schedulerName);
 
-	// set fileSystem
-	String fileSystemName = Config.getString("ThreadedKernel.fileSystem");
-	if (fileSystemName != null)
-	    fileSystem = (FileSystem) Lib.constructObject(fileSystemName);
-	else if (Machine.stubFileSystem() != null)
-	    fileSystem = Machine.stubFileSystem();
-	else
-	    fileSystem = null;
+        // set fileSystem
+        String fileSystemName = Config.getString("ThreadedKernel.fileSystem");
+        if (fileSystemName != null)
+            fileSystem = (FileSystem) Lib.constructObject(fileSystemName);
+        else if (Machine.stubFileSystem() != null)
+            fileSystem = Machine.stubFileSystem();
+        else
+            fileSystem = null;
 
-	// start threading
-	new KThread(null);
+        // start threading
+        new KThread(null);
 
-	alarm  = new Alarm();
+        alarm  = new Alarm();
 
-	Machine.interrupt().enable();
+        Machine.interrupt().enable();
+        selfTest();
     }
 
     /**
@@ -44,18 +45,17 @@ public class ThreadedKernel extends Kernel {
      * <tt>SynchList</tt>, and <tt>ElevatorBank</tt> classes. Note that the
      * autograder never calls this method, so it is safe to put additional
      * tests here.
-     */	
+     */
     public void selfTest() {
-        new KThread(new PingTest(1)).setName("forked thread").fork();
-        new PingTest(0).run();
-//	KThread.selfTest();
-//	Semaphore.selfTest();
-//	SynchList.selfTest();
-//	if (Machine.bank() != null) {
-//	    ElevatorBank.selfTest();
-//	}
+        KThread.selfTest();
+        Semaphore.selfTest();
+        SynchList.selfTest();
+        Condition2.selfTest();
+        if (Machine.bank() != null) {
+            ElevatorBank.selfTest();
+        }
     }
-    
+
     /**
      * A threaded kernel does not run user programs, so this method does
      * nothing.
@@ -67,22 +67,7 @@ public class ThreadedKernel extends Kernel {
      * Terminate this kernel. Never returns.
      */
     public void terminate() {
-	Machine.halt();
-    }
-
-    private static class PingTest implements Runnable {
-        PingTest(int which) {
-            this.which = which;
-        }
-
-        public void run() {
-            for (int i=0; i<10; i++) {
-                System.out.println("*** thread " + which + " looped " + i + " times");
-                KThread.currentThread().yield();
-            }
-        }
-
-        private int which;
+        Machine.halt();
     }
 
     /** Globally accessible reference to the scheduler. */
